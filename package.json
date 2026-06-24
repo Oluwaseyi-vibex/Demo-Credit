@@ -7,7 +7,7 @@
   "moduleResolution": "node",
   "esModuleInterop": true,
   "scripts": {
-    "dev": "node --loader ts-node/esm src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.ts",
     "test": "jest",
@@ -51,6 +51,7 @@
     "knex": "^3.2.10",
     "morgan": "^1.11.0",
     "mysql2": "^3.22.5",
+    "pg": "^8.22.0",
     "pino": "^10.3.1",
     "uuid": "^14.0.1",
     "zod": "^4.4.3"

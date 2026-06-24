@@ -1,10 +1,11 @@
+import "express-async-errors";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 
 import routes from "./routes/index.ts";
-import { errorHandler } from "./middlewares/error.middleware.ts";
+import { errorHandler } from "./middlewares/error.ts";
 const app = express();
 
 app.use(helmet());
