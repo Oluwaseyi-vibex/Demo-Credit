@@ -4,14 +4,14 @@ import {
   getWalletBalance,
   sendMoneyController,
   withdrawFromWallet,
-} from "./wallet.controller.ts";
-import { protect } from "../../middlewares/auth.ts";
-import { validate } from "../../middlewares/validate.ts";
+} from "./wallet.controller.js";
+import { protect } from "../../middlewares/auth.js";
+import { validate } from "../../middlewares/validate.js";
 import {
   fundWalletBodySchema,
   sendMoneyBodySchema,
-} from "./wallet.validation.ts";
-import { requireIdempotencyKey } from "../../middlewares/idempotency.ts";
+} from "./wallet.validation.js";
+import { requireIdempotencyKey } from "../../middlewares/idempotency.js";
 
 const router = Router();
 

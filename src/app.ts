@@ -4,8 +4,8 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 
-import routes from "./routes/index.ts";
-import { errorHandler } from "./middlewares/error.ts";
+import routes from "./routes/index.js";
+import { errorHandler } from "./middlewares/error.js";
 const app = express();
 
 app.use(helmet());
@@ -15,10 +15,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 app.get("/health", (_req, res) => {
-    res.status(200).json({
-        success: true,
-        message: "API is healthy",
-    });
+  res.status(200).json({
+    success: true,
+    message: "API is healthy",
+  });
 });
 
 app.use("/api/v1", routes);
@@ -26,10 +26,10 @@ app.use("/api/v1", routes);
 app.use(errorHandler);
 
 app.use("*", (_req, res) => {
-    res.status(404).json({
-        success: false,
-        message: "Route not found",
-    });
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
 });
 
 export default app;

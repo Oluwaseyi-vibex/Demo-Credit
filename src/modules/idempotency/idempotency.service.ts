@@ -1,5 +1,7 @@
+import type { Knex } from "knex";
+
 export async function getIdempotentResponse(
-  trx: any,
+  trx: Knex.Transaction,
   key: string,
   userId: string,
   endpoint: string,
@@ -23,7 +25,7 @@ export async function getIdempotentResponse(
 }
 
 export async function createIdempotentRecord(
-  trx: any,
+  trx: Knex.Transaction,
   key: string,
   userId: string,
   endpoint: string,

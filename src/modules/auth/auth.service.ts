@@ -1,13 +1,13 @@
-import { LoginBodySchema, RegisterBodySchema } from "./auth.validation.ts";
-import { AppError } from "../../utils/AppError.ts";
-import db from "../../config/db.ts";
+import { LoginBodySchema, RegisterBodySchema } from "./auth.validation.js";
+import { AppError } from "../../utils/AppError.js";
+import db from "../../config/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { User } from "./auth.types.ts";
+import { User } from "./auth.types.js";
 import axios from "axios";
-import { createWallet } from "../wallet/wallet.service.ts";
+import { createWallet } from "../wallet/wallet.service.js";
 import { v4 as uuidv4 } from "uuid";
-import { getWalletByUserId, getUserByEmail } from "../../utils/db-helpers.ts";
+import { getWalletByUserId, getUserByEmail } from "../../utils/db-helpers.js";
 
 function generateAuthToken(user: User) {
   const { id, email } = user;

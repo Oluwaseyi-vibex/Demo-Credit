@@ -4,7 +4,7 @@ import {
   fundWallet as fundWalletService,
   withdrawFromWallet as withdrawFromWalletService,
   sendMoney,
-} from "./wallet.service";
+} from "./wallet.service.js";
 
 export async function getWalletBalance(req: Request, res: Response) {
   const { user_id } = req.params;

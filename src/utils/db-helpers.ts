@@ -1,5 +1,5 @@
-import db from "../config/db";
-import { AppError } from "./AppError";
+import db from "../config/db.js";
+import { AppError } from "./AppError.js";
 
 /**
  * Retrieves a wallet by user ID with proper error handling

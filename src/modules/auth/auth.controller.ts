@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { getUserById, loginUser, registerUser } from "./auth.service.ts";
-import { sendAuthResponse } from "../../utils/auth-helpers.ts";
+import { getUserById, loginUser, registerUser } from "./auth.service.js";
+import { sendAuthResponse } from "../../utils/auth-helpers.js";
 
 export async function register(req: Request, res: Response) {
   const { user, token } = await registerUser(req.body);

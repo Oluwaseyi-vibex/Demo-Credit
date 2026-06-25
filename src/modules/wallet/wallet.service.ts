@@ -1,15 +1,16 @@
-import db from "../../config/db";
-import { AppError } from "../../utils/AppError";
+import type { Knex } from "knex";
+import db from "../../config/db.js";
+import { AppError } from "../../utils/AppError.js";
 import { v4 as uuidv4 } from "uuid";
 import {
   createIdempotentRecord,
   getIdempotentResponse,
-} from "../idempotency/idempotency.service";
+} from "../idempotency/idempotency.service.js";
 import {
   getWalletByUserId,
   getUserByEmail,
   validateAmount,
-} from "../../utils/db-helpers";
+} from "../../utils/db-helpers.js";
 
 export async function createWallet(userId: string) {
   const existingWallet = await db("wallets").where({ user_id: userId }).first();
@@ -42,7 +43,7 @@ export async function fundWallet(
 ) {
   validateAmount(amount);
 
-  return db.transaction(async (trx) => {
+  return db.transaction(async (trx: Knex.Transaction) => {
     const existingResponse = await getIdempotentResponse(
       trx,
       idempotencyKey,
@@ -98,7 +99,7 @@ export async function withdrawFromWallet(
 ) {
   validateAmount(amount);
 
-  return db.transaction(async (trx) => {
+  return db.transaction(async (trx: Knex.Transaction) => {
     const existingResponse = await getIdempotentResponse(
       trx,
       idempotencyKey,
@@ -163,7 +164,7 @@ export async function sendMoney(
     throw new AppError("Sender and receiver cannot be the same", 400);
   }
 
-  return db.transaction(async (trx) => {
+  return db.transaction(async (trx: Knex.Transaction) => {
     const existingResponse = await getIdempotentResponse(
       trx,
       idempotencyKey,
