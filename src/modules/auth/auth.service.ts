@@ -7,6 +7,7 @@ import { User } from "./auth.types.ts";
 import axios from "axios";
 import { createWallet } from "../wallet/wallet.service.ts";
 import { v4 as uuidv4 } from "uuid";
+import { getWalletByUserId, getUserByEmail } from "../../utils/db-helpers.ts";
 
 function generateAuthToken(user: User) {
   const { id, email } = user;
@@ -30,12 +31,9 @@ async function checkKarmaStatus(email: string) {
     };
 
     const res = await axios.get(url, { headers });
-
-    console.log(res.data);
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error("Karma lookup error:", error.response?.data);
       throw new AppError(
         error.response?.data?.message || "Failed to check karma status",
         error.response?.status || 400,
@@ -118,16 +116,11 @@ export async function loginUser(body: LoginBodySchema) {
 
 export async function getUserById(userId: string) {
   const user = await db("users").where({ id: userId }).first();
-  console.log("user: ", user);
   if (!user) {
     throw new AppError("User not found", 404);
   }
 
-  const wallet = await db("wallets").where({ user_id: userId }).first();
-  console.log("wallet: ", wallet);
-  if (!wallet) {
-    throw new AppError("Wallet not found", 404);
-  }
+  const wallet = await getWalletByUserId(userId);
 
   return {
     user: {

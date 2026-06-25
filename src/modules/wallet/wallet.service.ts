@@ -5,6 +5,11 @@ import {
   createIdempotentRecord,
   getIdempotentResponse,
 } from "../idempotency/idempotency.service";
+import {
+  getWalletByUserId,
+  getUserByEmail,
+  validateAmount,
+} from "../../utils/db-helpers";
 
 export async function createWallet(userId: string) {
   const existingWallet = await db("wallets").where({ user_id: userId }).first();
@@ -26,14 +31,7 @@ export async function createWallet(userId: string) {
 }
 
 export async function getWallet(userId: string) {
-  console.log("userid", userId);
-  const wallet = await db("wallets").where({ user_id: userId }).first();
-
-  if (!wallet) {
-    throw new AppError("Wallet not found", 404);
-  }
-
-  return wallet;
+  return getWalletByUserId(userId);
 }
 
 export async function fundWallet(
@@ -42,9 +40,7 @@ export async function fundWallet(
   idempotencyKey: string,
   description?: string,
 ) {
-  if (amount <= 0) {
-    throw new AppError("Amount must be positive", 400);
-  }
+  validateAmount(amount);
 
   return db.transaction(async (trx) => {
     const existingResponse = await getIdempotentResponse(
@@ -84,8 +80,6 @@ export async function fundWallet(
       .where({ id: transactionId })
       .first();
 
-    console.log("transaction", transaction);
-
     return createIdempotentRecord(
       trx,
       idempotencyKey,
@@ -102,9 +96,7 @@ export async function withdrawFromWallet(
   idempotencyKey: string,
   description?: string,
 ) {
-  if (amount <= 0) {
-    throw new AppError("Amount must be positive", 400);
-  }
+  validateAmount(amount);
 
   return db.transaction(async (trx) => {
     const existingResponse = await getIdempotentResponse(
@@ -165,9 +157,7 @@ export async function sendMoney(
   idempotencyKey: string,
   description?: string,
 ) {
-  if (amount <= 0) {
-    throw new AppError("Amount must be greater than zero", 400);
-  }
+  validateAmount(amount, "Amount must be greater than zero");
 
   if (senderEmail === receiverEmail) {
     throw new AppError("Sender and receiver cannot be the same", 400);
@@ -186,16 +176,12 @@ export async function sendMoney(
 
     // Find sender
     const sender = await trx("users").where({ id: senderId }).first();
-
-    console.log("sender", sender);
     if (!sender) {
       throw new AppError("Sender not found", 404);
     }
 
     // Find receiver
     const receiver = await trx("users").where({ email: receiverEmail }).first();
-
-    console.log("receiver", receiver);
     if (!receiver) {
       throw new AppError("Receiver not found", 404);
     }
@@ -206,8 +192,6 @@ export async function sendMoney(
       .select("id", "balance")
       .forUpdate()
       .first();
-
-    console.log("senderWallet", senderWallet);
     if (!senderWallet) {
       throw new AppError("Sender wallet not found", 404);
     }
@@ -218,8 +202,6 @@ export async function sendMoney(
       .select("id", "balance")
       .forUpdate()
       .first();
-
-    console.log("receiverWallet", receiverWallet);
     if (!receiverWallet) {
       throw new AppError("Receiver wallet not found", 404);
     }
