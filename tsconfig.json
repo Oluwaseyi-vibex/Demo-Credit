@@ -22,7 +22,7 @@
     "moduleResolution": "NodeNext",
 
     "outDir": "./dist",
-
+    "rootDir": "./src",
     "strict": true,
 
     "allowSyntheticDefaultImports": true,
@@ -32,7 +32,7 @@
     "skipLibCheck": true
   },
 
-  "include": ["src/**/*", "knexfile.ts"],
+  "include": ["src/**/*", "src/knexfile.ts"],
 
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
