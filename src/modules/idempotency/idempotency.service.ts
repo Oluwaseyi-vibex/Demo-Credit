@@ -1,20 +1,22 @@
-// src/modules/idempotency/idempotency.service.ts
-import db from "../../config/db";
-
 export async function getIdempotentResponse(
-  trx: any, // Knex transaction
+  trx: any,
   key: string,
   userId: string,
   endpoint: string,
 ) {
   const existing = await trx("idempotency_keys")
-    .where({ key, user_id: userId, endpoint })
+    .where({
+      key,
+      user_id: userId,
+      endpoint,
+      status: "COMPLETED",
+    })
     .first();
   return existing ? JSON.parse(existing.response) : null;
 }
 
 export async function createIdempotentRecord(
-  trx: any, // Knex transaction
+  trx: any,
   key: string,
   userId: string,
   endpoint: string,
@@ -26,14 +28,20 @@ export async function createIdempotentRecord(
       key,
       user_id: userId,
       endpoint,
+      status: "COMPLETED",
       response: JSON.stringify(response),
     });
     return response;
   } catch (error: any) {
-    // Handle unique constraint violation (PostgreSQL error code 23505)
-    if (error.code === "23505") {
+    if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
       const existing = await trx("idempotency_keys").where({ key }).first();
-      return existing ? JSON.parse(existing.response) : null;
+      if (!existing) {
+        return null;
+      }
+
+      return typeof existing.response === "string"
+        ? JSON.parse(existing.response)
+        : existing.response;
     }
     throw error;
   }

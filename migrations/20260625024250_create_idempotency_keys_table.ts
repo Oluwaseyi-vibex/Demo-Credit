@@ -15,7 +15,14 @@ export async function up(knex: Knex): Promise<void> {
 
     table.string("endpoint").notNullable();
 
-    table.jsonb("response");
+    table
+      .enu("status", ["PROCESSING", "COMPLETED", "FAILED"])
+      .notNullable()
+      .defaultTo("PROCESSING");
+
+    table.json("response");
+
+    table.text("error_message");
 
     table.timestamps(true, true);
 

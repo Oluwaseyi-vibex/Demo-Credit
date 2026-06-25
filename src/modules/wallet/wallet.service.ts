@@ -1,7 +1,5 @@
-import { email } from "zod";
 import db from "../../config/db";
 import { AppError } from "../../utils/AppError";
-import { Wallet } from "./wallet.types";
 import { v4 as uuidv4 } from "uuid";
 import {
   createIdempotentRecord,
@@ -9,16 +7,22 @@ import {
 } from "../idempotency/idempotency.service";
 
 export async function createWallet(userId: string) {
-  console.log("create wallet userid", userId);
-  const wallet = await db("wallets").where({ user_id: userId }).first();
+  const existingWallet = await db("wallets").where({ user_id: userId }).first();
 
-  if (wallet) {
+  if (existingWallet) {
     throw new AppError("Wallet already exists", 409);
   }
 
-  return (await db("wallets")
-    .insert({ user_id: userId })
-    .returning("*")) as Wallet[];
+  const walletId = uuidv4();
+
+  await db("wallets").insert({
+    id: walletId,
+    user_id: userId,
+  });
+
+  const wallet = await db("wallets").where({ id: walletId }).first();
+
+  return wallet;
 }
 
 export async function getWallet(userId: string) {
@@ -43,7 +47,6 @@ export async function fundWallet(
   }
 
   return db.transaction(async (trx) => {
-    // indempotency
     const existingResponse = await getIdempotentResponse(
       trx,
       idempotencyKey,
@@ -65,18 +68,23 @@ export async function fundWallet(
 
     await trx("wallets").where({ id: wallet.id }).increment("balance", amount);
 
+    const transactionId = uuidv4();
     const reference = `FUND-${uuidv4()}`;
-    const [transaction] = await trx("transactions")
-      .insert({
-        id: uuidv4(),
-        wallet_id: wallet.id,
-        type: "FUND",
-        amount,
-        status: "SUCCESS",
-        reference,
-        description: description || "Wallet funded",
-      })
-      .returning("*");
+    await trx("transactions").insert({
+      id: transactionId,
+      wallet_id: wallet.id,
+      type: "FUND",
+      amount,
+      status: "SUCCESS",
+      reference,
+      description: description || "Wallet funded",
+    });
+
+    const transaction = await trx("transactions")
+      .where({ id: transactionId })
+      .first();
+
+    console.log("transaction", transaction);
 
     return createIdempotentRecord(
       trx,
@@ -123,18 +131,21 @@ export async function withdrawFromWallet(
 
     await trx("wallets").where({ id: wallet.id }).decrement("balance", amount);
 
+    const transactionId = uuidv4();
     const reference = `WDR-${uuidv4()}`;
-    const [transaction] = await trx("transactions")
-      .insert({
-        id: uuidv4(),
-        wallet_id: wallet.id,
-        type: "WITHDRAW",
-        amount: -amount,
-        status: "SUCCESS",
-        reference,
-        description: description || "Wallet withdrawal",
-      })
-      .returning("*");
+    await trx("transactions").insert({
+      id: transactionId,
+      wallet_id: wallet.id,
+      type: "WITHDRAW",
+      amount: -amount,
+      status: "SUCCESS",
+      reference,
+      description: description || "Wallet withdrawal",
+    });
+
+    const transaction = await trx("transactions")
+      .where({ id: transactionId })
+      .first();
 
     return createIdempotentRecord(
       trx,
@@ -232,19 +243,22 @@ export async function sendMoney(
       .increment("balance", amount);
 
     // Create transfer record
-    const [transfer] = await trx("transfers")
-      .insert({
-        id: uuidv4(),
-        sender_wallet_id: senderWallet.id,
-        receiver_wallet_id: receiverWallet.id,
-        amount,
-        reference,
-      })
-      .returning("*");
+    const transferId = uuidv4();
 
+    await trx("transfers").insert({
+      id: transferId,
+      sender_wallet_id: senderWallet.id,
+      receiver_wallet_id: receiverWallet.id,
+      amount,
+      reference,
+    });
+
+    const transfer = await trx("transfers").where({ id: transferId }).first();
+
+    const senderTransactionId = uuidv4();
     // Sender transaction
     await trx("transactions").insert({
-      id: uuidv4(),
+      id: senderTransactionId,
       wallet_id: senderWallet.id,
       type: "TRANSFER_OUT",
       amount,
@@ -253,9 +267,10 @@ export async function sendMoney(
       description: description || `Transfer to ${receiverEmail}`,
     });
 
+    const receiverTransactionId = uuidv4();
     // Receiver transaction
     await trx("transactions").insert({
-      id: uuidv4(),
+      id: receiverTransactionId,
       wallet_id: receiverWallet.id,
       type: "TRANSFER_IN",
       amount,
@@ -264,12 +279,20 @@ export async function sendMoney(
       description: description || `Transfer from ${senderEmail}`,
     });
 
+    const response = {
+      transfer,
+      reference,
+      sender: senderEmail,
+      receiver: receiverEmail,
+      amount,
+    };
+
     return createIdempotentRecord(
       trx,
       idempotencyKey,
       senderId,
       "SEND_MONEY",
-      transfer,
+      response,
     );
   });
 }
