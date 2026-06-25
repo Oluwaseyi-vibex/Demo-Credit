@@ -27,7 +27,7 @@
 
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "types": ["node", "jest"],
+    "types": ["node"],
 
     "skipLibCheck": true
   },
