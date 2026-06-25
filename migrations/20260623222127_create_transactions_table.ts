@@ -22,7 +22,7 @@ export async function up(knex: Knex): Promise<void> {
             .notNullable()
             .defaultTo("SUCCESS");
 
-        table.string("reference").unique().notNullable();
+        table.string("reference").notNullable();
 
         table.text("description");
 

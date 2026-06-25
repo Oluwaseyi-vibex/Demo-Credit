@@ -44,14 +44,14 @@ async function checkKarmaStatus(email: string) {
 export async function registerUser(body: RegisterBodySchema) {
     const { first_name, last_name, email, password } = body;
 
-    // const karmaResponse = await checkKarmaStatus(email);
+    const karmaResponse = await checkKarmaStatus(email);
 
-    // if (karmaResponse.data) {
-    //     throw new AppError(
-    //         `User is blacklisted. Reason: ${karmaResponse.data.reason || 'No reason provided'}`,
-    //         403
-    //     );
-    // }
+    if (karmaResponse.data) {
+        throw new AppError(
+            `User is blacklisted. Reason: ${karmaResponse.data.reason || 'No reason provided'}`,
+            403
+        );
+    }
 
 
     const existingUser = await db("users").where({ email }).first();
@@ -97,4 +97,28 @@ export async function loginUser(body: LoginBodySchema) {
     const token = generateAuthToken(user);
 
     return { user, token };
+}
+
+export async function getUserById(userId: string) {
+    const user = await db("users").where({ id: userId }).first();
+    console.log("user: ", user);
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    const wallet = await db("wallets").where({ user_id: userId }).first();
+    console.log("wallet: ", wallet);
+    if (!wallet) {
+        throw new AppError("Wallet not found", 404);
+    }
+
+    return {
+        user: {
+            id: user.id as string,
+            email: user.email as string,
+            first_name: user.first_name as string,
+            last_name: user.last_name as string,
+            wallet_balance: wallet.balance as number,
+        },
+    };
 }

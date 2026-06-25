@@ -1,6 +1,6 @@
 
 import { Request, Response, NextFunction } from "express";
-import { loginUser, registerUser } from "./auth.service.ts";
+import { getUserById, loginUser, registerUser } from "./auth.service.ts";
 import { User } from "./auth.types.ts";
 
 const COOKIE_OPTIONS = {
@@ -39,4 +39,15 @@ export async function login(req: Request, res: Response, next: NextFunction) {
         },
         token,
     });
-} 
+}
+
+export async function getUserByIdController(req: Request, res: Response, next: NextFunction) {
+
+    const { user } = await getUserById(req.params.user_id as string);
+
+    res.status(200).json({
+        success: true,
+        message: "User fetched successfully",
+        user
+    });
+}
