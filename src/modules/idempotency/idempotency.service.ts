@@ -12,7 +12,14 @@ export async function getIdempotentResponse(
       status: "COMPLETED",
     })
     .first();
-  return existing ? JSON.parse(existing.response) : null;
+
+  if (!existing) {
+    return null;
+  }
+
+  return typeof existing.response === "string"
+    ? JSON.parse(existing.response)
+    : existing.response;
 }
 
 export async function createIdempotentRecord(

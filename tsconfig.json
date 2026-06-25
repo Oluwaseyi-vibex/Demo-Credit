@@ -6,7 +6,8 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["node", "jest"]
   },
   "ts-node": {
     "esm": true

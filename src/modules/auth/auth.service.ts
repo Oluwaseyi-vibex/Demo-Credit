@@ -50,9 +50,9 @@ export async function registerUser(body: RegisterBodySchema) {
 
   const karmaResponse = await checkKarmaStatus(email);
 
-  if (karmaResponse.data) {
+  if (karmaResponse.isBlacklisted) {
     throw new AppError(
-      `User is blacklisted. Reason: ${karmaResponse.data.reason || "No reason provided"}`,
+      `User is blacklisted. Reason: ${karmaResponse.reason || "No reason provided"}`,
       403,
     );
   }
@@ -76,12 +76,24 @@ export async function registerUser(body: RegisterBodySchema) {
 
   const user = await db("users").where({ id: userId }).first();
 
+  if (!user) {
+    throw new AppError("Failed to create user", 500);
+  }
+
   if (user.id) {
     await createWallet(user.id);
   }
-  const token = generateAuthToken(user);
 
-  return { user, token };
+  const safeUser = {
+    id: user.id as string,
+    email: user.email as string,
+    first_name: user.first_name as string,
+    last_name: user.last_name as string,
+  };
+
+  const token = generateAuthToken(safeUser);
+
+  return { user: safeUser, token };
 }
 
 export async function loginUser(body: LoginBodySchema) {
